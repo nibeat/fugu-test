@@ -139,7 +139,7 @@
 
         const scrnId = document.getElementById('scrnId').value;
         const param = document.getElementById('param').value;
-        if (!text) return alert('화면ID를 입력해주세요.');
+        if (!scrnId) return alert('화면ID를 입력해주세요.');
         record = { scrnId: scrnId, param: param };
         
         log("저장할 NFC 태그를 접촉시켜 주세요.");
