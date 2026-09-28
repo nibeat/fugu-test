@@ -94,7 +94,7 @@
 
     function log(message) {
       const logDiv = document.getElementById('log');
-      logDiv.textContent += message + '<br/>';
+      logDiv.innerHTML += message + '<br/>';
       logDiv.scrollTop = logDiv.scrollHeight;
     }
 
@@ -115,11 +115,15 @@
           log(`• 기록된 레코드 수: ${message.records.length}`);
 
           for (const record of message.records) {
-            let url = `https://ui.vpay.co.kr/s/IqZm/785?landingId=${record.scrnId}`;
-            log(`- 화면ID : ${record.scrnId}`);
-            if(record.param) {
-                url = url + `&${record.param}`;
-                log(`- 파라미터 : ${record.param}`);
+            const textDecoder = new TextDecoder(record.encoding);
+            const data = textDecoder.decode(record.data);
+            const scrnId = data.split("|")[0];
+            const param = data.split("|")[1];
+            let url = `https://ui.vpay.co.kr/s/IqZm/785?landingId=${scrnId}`;
+            log(`- 화면ID : ${scrnId}`);
+            if(param) {
+                url = url + `&${param}`;
+                log(`- 파라미터 : ${param}`);
             }
             if(confirm(`이동하시겠습니까?`)) {
                 window.open(url);
