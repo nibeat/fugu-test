@@ -77,7 +77,7 @@
 
   <div class="card">
     <h2>로그</h2>
-    <div id="log">앱이 준비되었습니다.\n</div>
+    <div id="log">앱이 준비되었습니다.</div>
   </div>
 
   <script>
@@ -94,7 +94,7 @@
 
     function log(message) {
       const logDiv = document.getElementById('log');
-      logDiv.textContent += message + '\n';
+      logDiv.textContent += message + '<br/>';
       logDiv.scrollTop = logDiv.scrollHeight;
     }
 
@@ -110,7 +110,7 @@
         });
 
         ndef.addEventListener("reading", ({ message, serialNumber }) => {
-          log(`\n태그 감지됨!`);
+          log(`태그 감지됨!`);
           log(`• 시리얼 번호 (UID): ${serialNumber}`);
           log(`• 기록된 레코드 수: ${message.records.length}`);
 
@@ -140,7 +140,8 @@
         const scrnId = document.getElementById('scrnId').value;
         const param = document.getElementById('param').value;
         if (!scrnId) return alert('화면ID를 입력해주세요.');
-        record = { scrnId: scrnId, param: param };
+
+        record = { recordType: "text", data: `${scrnId}|${param}` };
         
         log("저장할 NFC 태그를 접촉시켜 주세요.");
        
