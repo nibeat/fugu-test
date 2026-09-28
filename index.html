@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFC Reader/Writer</title>
+
+  <meta name="theme-color" content="#007bff">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h2 { margin-top: 0; font-size: 1.2rem; color: #007bff; }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { background-color: #ccc; }
+    button.secondary { background-color: #6c757d; }
+    #log {
+      background: #1e1e1e;
+      color: #00ff66;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      height: 180px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .status-box {
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>NFC Manager</h1>
+
+  <div class="card">
+    <div id="supportStatus" class="status-box">NFC 지원 여부 확인 중...</div>
+    <button id="scanBtn" onclick="readNFC()">NFC 읽기</button>
+  </div>
+
+  <div class="card">
+    <h2>NFC 데이터 쓰기</h2>
+    화면ID : <input type="text" id="scrnId" placeholder="P0609PG001W" value="P0609PG001W"><br/>
+    파라미터 : <input type="text" id="param" placeholder="merId=coupang2" value="merId=coupang2">
+    <button onclick="writeNFC()" class="secondary">NFC 저장</button>
+  </div>
+
+  <div class="card">
+    <h2>로그</h2>
+    <div id="log">앱이 준비되었습니다.\n</div>
+  </div>
+
+  <script>
+    const statusDiv = document.getElementById('supportStatus');
+
+    if ('NDEFReader' in window) {
+      statusDiv.textContent = "Web NFC를 사용할 수 있습니다.";
+      statusDiv.style.color = "green";
+    } else {
+      statusDiv.textContent = "이 브라우저는 Web NFC를 지원하지 않습니다.";
+      statusDiv.style.color = "red";
+      document.getElementById('scanBtn').disabled = true;
+    }
+
+    function log(message) {
+      const logDiv = document.getElementById('log');
+      logDiv.textContent += message + '\n';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 2. NFC 읽기 기능
+    async function readNFC() {
+      try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        log("NFC 태그를 스마트폰 뒷면에 태그하세요.");
+
+        ndef.addEventListener("readingerror", () => {
+          log("NFC 태그 읽기 실패. 다시 시도해 주세요.");
+        });
+
+        ndef.addEventListener("reading", ({ message, serialNumber }) => {
+          log(`\n태그 감지됨!`);
+          log(`• 시리얼 번호 (UID): ${serialNumber}`);
+          log(`• 기록된 레코드 수: ${message.records.length}`);
+
+          for (const record of message.records) {
+            let url = `https://ui.vpay.co.kr/s/IqZm/785?landingId=${record.scrnId}`;
+            log(`- 화면ID : ${record.scrnId}`);
+            if(record.param) {
+                url = url + `&${record.param}`;
+                log(`- 파라미터 : ${record.param}`);
+            }
+            if(confirm(`이동하시겠습니까?`)) {
+                window.open(url);
+            }
+          }
+        });
+      } catch (error) {
+        log(`오류 발생: ${error}`);
+      }
+    }
+
+    // 3. NFC 쓰기 기능
+    async function writeNFC() {
+      try {
+        const ndef = new NDEFReader();
+        let record = {};
+
+        const scrnId = document.getElementById('scrnId').value;
+        const param = document.getElementById('param').value;
+        if (!text) return alert('화면ID를 입력해주세요.');
+        record = { scrnId: scrnId, param: param };
+        
+        log("저장할 NFC 태그를 접촉시켜 주세요.");
+       
+        // overwrite 옵션을 true로 지정하여 기존 데이터 덮어쓰기
+        await ndef.write({ records: [record] }, { overwrite: true });
+       
+        log("NFC 저장 완료!");
+      } catch (error) {
+        log(`❌ 쓰기 오류: ${error}`);
+      }
+    }
+  </script>
+</body>
+</html>
